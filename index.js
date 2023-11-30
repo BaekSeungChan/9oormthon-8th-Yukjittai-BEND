@@ -59,7 +59,101 @@ app.post('/kakao/directions', async (req, res) => {
       console.error('Error calling Kakao Directions API:', error);
       res.status(500).send('Error processing your request');
     }
-  });
+});
+
+// Place 관련 서비스 로직
+const sortAndFilterPlaces = (places) => {
+    // 반경으로 필터링 예시
+    const filteredByRadius = places.filter(place => place.radius <= someRadiusValue);
+  
+    // 리뷰 수로 정렬
+    const sortedByReviews = filteredByRadius.sort((a, b) => b.reviewCount - a.reviewCount);
+  
+    // 가나다순으로 정렬
+    const sortedAlphabetically = sortedByReviews.sort((a, b) => a.name.localeCompare(b.name));
+  
+    return sortedAlphabetically;
+  };
+  
+  // Place 라우트
+  app.get('/places', async (req, res) => {
+    try {
+      const { places } = req.query;
+      const sortedPlace = sortAndFilterPlaces(places);
+      res.status(200).json(sortedPlace);
+    } catch (error) {
+      console.error('Error in place processing:', error);
+      res.status(500).send('Error processing your request');
+    }
+});
+
+app.post('/search-places', async (req, res) => {
+    const { standard, radius, type, places } = req.body;
+
+    try {
+        let filteredPlaces = filterByRadius(places, standard, radius);
+        filteredPlaces = filterByType(filteredPlaces, type);
+
+        res.json(filteredPlaces);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+function filterByRadius(places, standard, radius) {
+    const distanceAddedPlaces = places.map(place => ({
+      ...place,
+      distance: getDistanceFromLatLonInKm(
+        standard.y, standard.x, // 기준 좌표 (위도, 경도)
+        parseFloat(place.y), parseFloat(place.x) // 장소의 좌표 (위도, 경도)
+      )
+    }));
+  
+    if (radius === "가까운 순") {
+      // "가까운 순"으로 정렬
+      return distanceAddedPlaces.sort((a, b) => a.distance - b.distance);
+    } else if (radius === "500m") {
+      // 500m 이내의 장소 필터링
+      return distanceAddedPlaces.filter(place => place.distance <= 0.5);
+    } else if (radius === "1km") {
+      // 1km 이내의 장소 필터링
+      return distanceAddedPlaces.filter(place => place.distance <= 1);
+    }
+    return [];
+}
+  
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // 지구의 반지름(km)
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // 거리(km)
+}
+  
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+
+function filterByType(places, type) {
+    const indoorTypes = ["아쿠아리움", "박물관", "식물원", "전망대", "전시관", "인라인스케이트", "만화카페"];
+    const themeTypes = ["농장", "동굴", "테마파크", "탑", "성곽", "유원지", "문화유적", "숲"];
+  
+    return places.filter(place => {
+      const category = place.category_name;
+      if (type === "실내") {
+        return indoorTypes.some(indoorType => category.includes(indoorType));
+      } else if (type === "테마") {
+        return themeTypes.some(themeType => category.includes(themeType));
+      }
+      return false;
+    });
+}
+
 
 const port = process.env.PORT || 8001;
 
