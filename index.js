@@ -17,7 +17,16 @@ app.get("/", (req, res) => {
 })
 
 app.post("/message", (req, res) => {
-    const message = req.body.message;
+    const aaa = req.body.message;
+    const bbb = req.body.bbb
+    const ccc = req.body.ccc
+    const ddd = req.body.ddd
+    const message = `당신은 제주도 관광업체의 전문가입니다. 나는 지금 ${bbb} 나는 ${ccc} 활동과 ${ddd} 활동이 하고 싶습니다. 아래의 조건 사항을 지켜 추천해주십시오.
+    1. 정확한 활동명으로 추천해주세요
+    1. 제안된 활동명은 1개의 단어로 표현해주십시오.
+    2. 활동명은 2개 이내로 추천해주십시오
+    `
+    
 
     const openFun = async() => {
     const chatCompletion = await openai.chat.completions.create({
