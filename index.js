@@ -57,6 +57,9 @@ app.post("/message", (req, res) => {
     openFun();   
 });
 
+
+
+
 // 카카오 다중목적지 길찾기 API 라우트
 app.post('/kakao/directions', async (req, res) => {
     try {
@@ -88,15 +91,16 @@ const sortAndFilterPlaces = (places) => {
   };
   
   // Place 라우트
-  app.get('/places', async (req, res) => {
-    try {
-      const { places } = req.query;
-      const sortedPlace = sortAndFilterPlaces(places);
-      res.status(200).json(sortedPlace);
-    } catch (error) {
-      console.error('Error in place processing:', error);
-      res.status(500).send('Error processing your request');
-    }
+  app.post('/places', async (req, res) => {
+    console.log("req : ", req.body[3]);
+    // try {
+    //   const { places } = req.query;
+    //   const sortedPlace = sortAndFilterPlaces(places);
+    //   res.status(200).json(sortedPlace);
+    // } catch (error) {
+    //   console.error('Error in place processing:', error);
+    //   res.status(500).send('Error processing your request');
+    // }
 });
 
 app.post('/search-places', async (req, res) => {
@@ -167,8 +171,12 @@ function filterByType(places, type) {
 }
 
 
+
+
 const port = process.env.PORT || 8001;
 
 app.listen(port, () => {
     console.log(`${port}`);
 })
+
+
