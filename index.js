@@ -57,9 +57,6 @@ app.post("/message", (req, res) => {
     openFun();   
 });
 
-
-
-
 // 카카오 다중목적지 길찾기 API 라우트
 app.post('/kakao/directions', async (req, res) => {
     try {
@@ -91,27 +88,22 @@ const sortAndFilterPlaces = (places) => {
   };
   
   // Place 라우트
-  app.post('/places', async (req, res) => {
-    console.log("req : ", req.body[3]);
-    // try {
-    //   const { places } = req.query;
-    //   const sortedPlace = sortAndFilterPlaces(places);
-    //   res.status(200).json(sortedPlace);
-    // } catch (error) {
-    //   console.error('Error in place processing:', error);
-    //   res.status(500).send('Error processing your request');
-    // }
+  app.get('/places', async (req, res) => {
+    try {
+      const { places } = req.query;
+      const sortedPlace = sortAndFilterPlaces(places);
+      res.status(200).json(sortedPlace);
+    } catch (error) {
+      console.error('Error in place processing:', error);
+      res.status(500).send('Error processing your request');
+    }
 });
 
 app.post('/search-places', async (req, res) => {
     const { standard, radius, type, places } = req.body;
-    console.log({places})
-
     try {
         let filteredPlaces = filterByRadius(places, standard, radius);
-        console.log({filteredPlaces})
         filteredPlaces = filterByType(filteredPlaces, type);
-        console.log({filteredPlaces})
         res.json(filteredPlaces);
     } catch (error) {
         console.error('Error:', error);
@@ -125,14 +117,6 @@ function filterByRadius(places, standard, radius) {
             standard.y, standard.x, // 기준 좌표 (위도, 경도)
             parseFloat(place.y), parseFloat(place.x) // 장소의 좌표 (위도, 경도)
           )
-          console.log({
-            1:standard.y,
-            2:standard.x,
-            3:parseFloat(place.y),
-            4:parseFloat(place.x),
-            distance
-          })
-
         return({
       ...place,
       distance
@@ -182,13 +166,8 @@ function filterByType(places, type) {
     });
 }
 
-
-
-
 const port = process.env.PORT || 8001;
 
 app.listen(port, () => {
     console.log(`${port}`);
 })
-
-
