@@ -14,14 +14,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.get("/", (req, res) => {
-    res.send("dkdkdk")
+app.get("ping", (req, res) => {
+    res.send("테스트")
 })
 
 // GPT API
 app.post("/message", (req, res) => {
-    console.log('req', req);
-    console.log("req.body", req.body);
     const keyword = req.body.keyword
     const condition1 = req.body.condition1
     const condition2 = req.body.condition2
@@ -41,8 +39,13 @@ app.post("/message", (req, res) => {
                 messages: [{"role": "user", "content": message,}],
                 max_tokens:1000
             });
+
+
+            const responseArray = chatCompletion.choices[0].message.content
+            .split("\n")
+            .map(line => line.replace(/^\d+\.\s*/, '').trim()) // Remove numbers and trim
+            .filter(line => line);
         
-          const responseArray = chatCompletion.choices[0].message.content.split(", ");
           res.status(200).send(responseArray)
 
         }catch(error){
