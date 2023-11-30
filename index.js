@@ -59,6 +59,7 @@ app.post("/message", (req, res) => {
 
 // 카카오 다중목적지 길찾기 API 라우트
 app.post('/kakao/directions', async (req, res) => {
+  console.log("req.body : ", req.body);
     try {
       const kakaoResponse = await axios.post('https://apis-navi.kakaomobility.com/v1/destinations/directions', req.body, {
         headers: {
@@ -101,10 +102,13 @@ const sortAndFilterPlaces = (places) => {
 
 app.post('/search-places', async (req, res) => {
     const { standard, radius, type, places } = req.body;
+    // console.log('places: ', places);
+    // console.log('standard: ', standard);
     try {
         let filteredPlaces = filterByRadius(places, standard, radius);
         filteredPlaces = filterByType(filteredPlaces, type);
-        res.json(filteredPlaces);
+        console.log("filteredPlaces: ", filteredPlaces);
+        res.send(filteredPlaces.slice(0, 5));
     } catch (error) {
         console.error('Error:', error);
         res.status(500).send('Internal Server Error');
@@ -116,21 +120,25 @@ function filterByRadius(places, standard, radius) {
         const distance = getDistanceFromLatLonInKm(
             standard.y, standard.x, // 기준 좌표 (위도, 경도)
             parseFloat(place.y), parseFloat(place.x) // 장소의 좌표 (위도, 경도)
-          )
+          );
+        console.log('distance: ', distance);
         return({
       ...place,
       distance
     })});
+
+    console.log('distanceAddedPlaces: ', distanceAddedPlaces);
   
-    if (radius === "가까운 순") {
+    if (radius === "가까운 순으로") {
+      console.log('!@#!@$@!$');
       // "가까운 순"으로 정렬
       return distanceAddedPlaces.sort((a, b) => a.distance - b.distance);
-    } else if (radius === "500m") {
+    } else if (radius === "50km") {
       // 500m 이내의 장소 필터링
-      return distanceAddedPlaces.filter(place => place.distance <= 0.5);
-    } else if (radius === "1km") {
+      return distanceAddedPlaces.filter(place => place.distance <= 50);
+    } else if (radius === "10km") {
       // 1km 이내의 장소 필터링
-      return distanceAddedPlaces.filter(place => place.distance <= 1);
+      return distanceAddedPlaces.filter(place => place.distance <= 10);
     }
     return [];
 }
@@ -152,18 +160,28 @@ function deg2rad(deg) {
 }
 
 function filterByType(places, type) {
-    const indoorTypes = ["아쿠아리움", "박물관", "식물원", "전망대", "전시관", "인라인스케이트", "만화카페"];
+    const indoorTypes = ["아쿠아리움", "박물관", "식물원", "전망대", "전시관", "인라인스케이트", "만화카페", 
+  '매표소', '관광지', '낚시', '여행'];
     const themeTypes = ["농장", "동굴", "테마파크", "탑", "성곽", "유원지", "문화유적", "숲"];
-  
-    return places.filter(place => {
+    console.log('places: ', places);
+    return places.reduce((acc, place) => {
       const category = place.category_name;
-      if (type === "실내") {
-        return indoorTypes.some(indoorType => category.includes(indoorType));
-      } else if (type === "테마") {
-        return themeTypes.some(themeType => category.includes(themeType));
+      console.log('categoryName: ', category);
+      // console.log('category: ', {category}, {type});
+      if (type === "실내 관광지") {
+        console.log('indoorTypes.some(indoorType =>  category.includes(indoorType)): ', indoorTypes.some(indoorType =>  category.includes(indoorType)));
+        if (indoorTypes.some(indoorType =>  category.includes(indoorType))) {
+          acc.push(place);
+        }
+      } else if (type === "테마 관광지") {
+        if (themeTypes.some(themeType => category.includes(themeType))) {
+          acc.push(place);
+        }
       }
-      return false;
-    });
+
+      return acc;
+
+    }, []);
 }
 
 const port = process.env.PORT || 8001;
