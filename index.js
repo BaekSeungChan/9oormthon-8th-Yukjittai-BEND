@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const OpenAI  = require('openai');
 const cors = require('cors');
+const axios = require('axios');
 
 require("dotenv").config();
 const app = express();
@@ -44,7 +45,21 @@ app.post("/message", (req, res) => {
     openFun();   
 });
 
-
+// 카카오 다중목적지 길찾기 API 라우트
+app.post('/kakao/directions', async (req, res) => {
+    try {
+      const kakaoResponse = await axios.post('https://apis-navi.kakaomobility.com/v1/destinations/directions', req.body, {
+        headers: {
+          Authorization: `KakaoAK ${process.env.KAKAO_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      res.json(kakaoResponse.data);
+    } catch (error) {
+      console.error('Error calling Kakao Directions API:', error);
+      res.status(500).send('Error processing your request');
+    }
+  });
 
 const port = process.env.PORT || 8001;
 
