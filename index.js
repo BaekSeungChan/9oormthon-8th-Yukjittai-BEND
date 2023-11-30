@@ -101,11 +101,13 @@ const sortAndFilterPlaces = (places) => {
 
 app.post('/search-places', async (req, res) => {
     const { standard, radius, type, places } = req.body;
+    console.log({places})
 
     try {
         let filteredPlaces = filterByRadius(places, standard, radius);
+        console.log({filteredPlaces})
         filteredPlaces = filterByType(filteredPlaces, type);
-
+        console.log({filteredPlaces})
         res.json(filteredPlaces);
     } catch (error) {
         console.error('Error:', error);
@@ -114,13 +116,23 @@ app.post('/search-places', async (req, res) => {
 });
 
 function filterByRadius(places, standard, radius) {
-    const distanceAddedPlaces = places.map(place => ({
+    const distanceAddedPlaces = places.map(place =>{ 
+        const distance = getDistanceFromLatLonInKm(
+            standard.y, standard.x, // 기준 좌표 (위도, 경도)
+            parseFloat(place.y), parseFloat(place.x) // 장소의 좌표 (위도, 경도)
+          )
+          console.log({
+            1:standard.y,
+            2:standard.x,
+            3:parseFloat(place.y),
+            4:parseFloat(place.x),
+            distance
+          })
+
+        return({
       ...place,
-      distance: getDistanceFromLatLonInKm(
-        standard.y, standard.x, // 기준 좌표 (위도, 경도)
-        parseFloat(place.y), parseFloat(place.x) // 장소의 좌표 (위도, 경도)
-      )
-    }));
+      distance
+    })});
   
     if (radius === "가까운 순") {
       // "가까운 순"으로 정렬
