@@ -34,13 +34,22 @@ app.post("/message", (req, res) => {
     
 
     const openFun = async() => {
-    const chatCompletion = await openai.chat.completions.create({
-        model: "gpt-4-0314", //gpt-3.5-turbo
-        messages: [{"role": "user", "content": message,}],
-        max_tokens:1000
-  });
-  console.log(chatCompletion.choices[0].message.content);
-  res.send(chatCompletion.choices[0].message.content); 
+        try{
+
+            const chatCompletion = await openai.chat.completions.create({
+                model: "gpt-4-0314", //gpt-3.5-turbo
+                messages: [{"role": "user", "content": message,}],
+                max_tokens:1000
+            });
+        
+          const responseArray = chatCompletion.choices[0].message.content.split(", ");
+          res.status(200).send(responseArray)
+
+        }catch(error){
+            console.log(error);
+            res.status(500).send(error)
+        }
+
     }   
     openFun();   
 });
